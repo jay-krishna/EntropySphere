@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<title>Entropy Sphere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@500;600;700&family=Onest:wght@400..700&display=swap" rel="stylesheet">
+
+<!-- PWA -->
+<meta name="description" content="Generate strong, high-entropy passwords. Works offline." />
+<link rel="manifest" href="./manifest.webmanifest" />
+<meta name="theme-color" id="themeColor" content="#6d4aff" />
+<link rel="icon" href="./image/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="./image/favicon-32.png" sizes="32x32" type="image/png" />
+<link rel="icon" href="./image/favicon-16.png" sizes="16x16" type="image/png" />
+<link rel="icon" href="./image/favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="./image/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Entropy Sphere" />
+<meta name="application-name" content="Entropy Sphere" />
+<style>
+  :root {
+    --font-display: "Bricolage Grotesque", "Onest", system-ui, sans-serif;
+    --font-body:    "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono:    "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+    --bg:            #ece9f2;
+    --bg-glow:       #ded9ec;
+    --surface:       #ffffff;
+    --surface-2:     #f4f3f9;
+    --border:        #e6e3f0;
+    --border-strong: #d5d1e3;
+    --text:          #1c1a29;
+    --text-soft:     #5a566c;
+    --text-faint:    #8b87a0;
+
+    --primary:       #6d4aff;
+    --primary-hover: #5c39ee;
+    --primary-soft:  #ede8ff;
+    --on-primary:    #ffffff;
+
+    --track:         #e0dcec;
+
+    --c-upper:  #6d4aff;
+    --c-lower:  #0e9f8e;
+    --c-digit:  #e07b00;
+    --c-symbol: #e0348a;
+
+    --good:  #16a34a;
+
+    --tip-bg: #211f31;
+    --tip-fg: #f3f2fa;
+
+    --shadow:    0 1px 2px rgba(24,20,42,.04), 0 18px 48px -16px rgba(50,30,120,.22);
+    --shadow-sm: 0 1px 2px rgba(24,20,42,.06);
+    --radius: 24px;
+    --radius-sm: 14px;
+  }
+
+  [data-theme="dark"] {
+    --bg:            #0c0b15;
+    --bg-glow:       #191333;
+    --surface:       #151424;
+    --surface-2:     #1e1c30;
+    --border:        #2a2740;
+    --border-strong: #383350;
+    --text:          #edecf7;
+    --text-soft:     #a6a2bd;
+    --text-faint:    #726e8e;
+
+    --primary:       #8b6bff;
+    --primary-hover: #9a7dff;
+    --primary-soft:  #241f3d;
+    --on-primary:    #ffffff;
+
+    --track:         #2b2842;
+
+    --c-upper:  #b3a4ff;
+    --c-lower:  #4fe3cc;
+    --c-digit:  #ffc24d;
+    --c-symbol: #ff7ab8;
+
+    --good:  #4ade80;
+
+    --tip-bg: #2c2945;
+    --tip-fg: #f3f2fa;
+
+    --shadow:    0 1px 2px rgba(0,0,0,.3), 0 28px 64px -22px rgba(0,0,0,.75);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    min-height: 100dvh;
+    background: var(--bg);
+    background-image:
+      radial-gradient(115% 85% at 85% -10%, var(--bg-glow) 0%, transparent 52%),
+      radial-gradient(90% 65% at -8% 108%, var(--bg-glow) 0%, transparent 48%);
+    color: var(--text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: clamp(14px, 3.5vw, 40px);
+    padding-top: max(clamp(14px, 3.5vw, 40px), env(safe-area-inset-top));
+    transition: background-color .35s ease, color .35s ease;
+  }
+
+  .app { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* ---------- Header ---------- */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 2px 4px; }
+  .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+  .mark {
+    width: 44px; height: 44px; flex: none;
+    border-radius: 14px;
+    display: grid; place-items: center;
+    background: linear-gradient(155deg, var(--primary), color-mix(in srgb, var(--primary) 55%, #ff9ad6));
+    color: #fff;
+    box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--primary) 70%, transparent);
+  }
+  .mark svg { width: 26px; height: 26px; }
+  .brand h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+    letter-spacing: -0.02em;
+    margin: 0; line-height: 1;
+  }
+  .brand p { margin: 3px 0 0; font-size: .78rem; color: var(--text-faint); line-height: 1.2; }
+
+  .top-actions { display: flex; align-items: center; gap: 9px; flex: none; }
+  .icon-btn {
+    flex: none; width: 46px; height: 46px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text-soft);
+    cursor: pointer; display: grid; place-items: center; box-shadow: var(--shadow-sm);
+    transition: transform .2s ease, border-color .2s ease, background-color .3s ease, color .3s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .icon-btn:hover { transform: translateY(-1px); border-color: var(--border-strong); }
+  .icon-btn:active { transform: scale(.94); }
+  .icon-btn svg { width: 21px; height: 21px; }
+  .icon-btn:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--primary-soft); }
+  .install-btn { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 38%, var(--border)); }
+  .install-btn[hidden] { display: none; }
+  .theme-toggle .moon { display: none; }
+  [data-theme="dark"] .theme-toggle .sun  { display: none; }
+  [data-theme="dark"] .theme-toggle .moon { display: block; }
+
+  /* ---------- Card ---------- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: clamp(18px, 5vw, 26px);
+    display: flex; flex-direction: column; gap: 22px;
+    transition: background-color .35s ease, border-color .35s ease;
+  }
+
+  .section-label {
+    font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text-faint); margin: 0 0 12px;
+  }
+
+  /* ---------- Length ---------- */
+  .len-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+  .len-head .lbl { font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--text); letter-spacing: -.01em; }
+
+  .num-field {
+    width: 76px; height: 46px; text-align: center;
+    font-family: var(--font-mono); font-size: 1.15rem; font-weight: 600; color: var(--primary);
+    background: var(--surface-2); border: 1.5px solid var(--border); border-radius: 12px;
+    transition: border-color .18s ease, box-shadow .18s ease, background-color .3s ease;
+    -moz-appearance: textfield;
+  }
+  .num-field::-webkit-outer-spin-button, .num-field::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .num-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+
+  /* slider row with steppers */
+  .slider-row { display: flex; align-items: center; gap: 12px; }
+  .step {
+    flex: none; width: 42px; height: 42px; border-radius: 50%;
+    border: 1.5px solid var(--border); background: var(--surface-2); color: var(--text);
+    cursor: pointer; display: grid; place-items: center;
+    transition: transform .12s ease, border-color .18s ease, background-color .2s ease, opacity .2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .step svg { width: 20px; height: 20px; }
+  .step:hover { border-color: var(--border-strong); }
+  .step:active { transform: scale(.9); background: var(--primary-soft); }
+  .step:disabled { opacity: .38; cursor: not-allowed; }
+  .step:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--primary-soft); }
+
+  .slider { position: relative; flex: 1 1 auto; height: 26px; display: flex; align-items: center; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 8px; margin: 0; border-radius: 999px;
+    background: linear-gradient(to right, var(--primary) var(--fill, 12%), var(--track) var(--fill, 12%));
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--surface); border: 2.5px solid var(--primary);
+    box-shadow: 0 2px 8px rgba(30,20,60,.25); transition: transform .15s ease;
+  }
+  input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.14); }
+  input[type="range"]::-moz-range-thumb {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--surface);
+    border: 2.5px solid var(--primary); box-shadow: 0 2px 8px rgba(30,20,60,.25);
+  }
+  input[type="range"]::-moz-range-track { background: transparent; }
+  input[type="range"]:focus-visible { outline: none; }
+  input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 5px var(--primary-soft); }
+  input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 5px var(--primary-soft); }
+
+  /* ---------- Rows ---------- */
+  .block-head { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+  .block-head .section-label { margin: 0; }
+
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    display: flex; align-items: center; gap: 12px; padding: 11px 2px;
+    border-top: 1px solid var(--border); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .rows .row:first-child { border-top: none; }
+  .rlead { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0; }
+  .swatch {
+    width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: .74rem; font-weight: 700;
+    background: var(--surface-2); color: var(--tint, var(--text-soft));
+  }
+  .ntxt { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+  .name { font-size: .96rem; font-weight: 500; color: var(--text); white-space: nowrap; }
+
+  .info {
+    flex: none; width: 20px; height: 20px; padding: 0; border: none; border-radius: 50%;
+    background: transparent; color: var(--text-faint); cursor: pointer; display: grid; place-items: center;
+    transition: color .15s ease, transform .12s ease; -webkit-tap-highlight-color: transparent;
+  }
+  .info svg { width: 16px; height: 16px; }
+  .info:hover { color: var(--primary); }
+  .info:active { transform: scale(.85); }
+  .info:focus-visible { outline: none; color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+  /* switch */
+  .switch { position: relative; flex: none; width: 48px; height: 28px; }
+  .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .switch .slot { position: absolute; inset: 0; border-radius: 999px; background: var(--track); transition: background .22s ease; }
+  .switch .knob {
+    position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    transition: transform .22s cubic-bezier(.34,1.56,.64,1);
+  }
+  .switch input:checked ~ .slot { background: var(--primary); }
+  .switch input:checked ~ .knob { transform: translateX(20px); }
+  .switch input:focus-visible ~ .slot { box-shadow: 0 0 0 4px var(--primary-soft); }
+
+  /* symbols editable field */
+  .sym-edit {
+    display: grid; grid-template-rows: 0fr; opacity: 0; margin-top: 0;
+    transition: grid-template-rows .28s ease, opacity .28s ease, margin .28s ease;
+  }
+  .sym-edit.show { grid-template-rows: 1fr; opacity: 1; margin-top: 6px; }
+  .sym-edit > div { overflow: hidden; }
+  .sym-input {
+    width: 100%; height: 44px; padding: 0 14px;
+    font-family: var(--font-mono); font-size: .95rem; letter-spacing: .04em; color: var(--c-symbol);
+    background: var(--surface-2); border: 1.5px solid var(--border); border-radius: 11px;
+    transition: border-color .18s ease, box-shadow .18s ease;
+  }
+  .sym-input:focus { outline: none; border-color: var(--c-symbol); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-symbol) 16%, transparent); }
+
+  /* ---------- Output ---------- */
+  .out-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .out-head .left { display: flex; align-items: center; gap: 6px; }
+  .out-head .entropy { font-size: .74rem; color: var(--text-faint); font-family: var(--font-mono); }
+
+  .output {
+    position: relative; min-height: 96px; padding: 18px;
+    background: var(--surface-2); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    display: flex; align-items: center; transition: border-color .3s ease, background-color .3s ease;
+  }
+  .pw {
+    font-family: var(--font-mono); font-weight: 600;
+    font-size: clamp(1.05rem, 4.6vw, 1.32rem); line-height: 1.65; letter-spacing: .01em;
+    word-break: break-all; width: 100%;
+  }
+  .pw .u { color: var(--c-upper); }
+  .pw .l { color: var(--c-lower); }
+  .pw .d { color: var(--c-digit); }
+  .pw .s { color: var(--c-symbol); }
+  .pw.empty { color: var(--text-faint); font-weight: 500; font-size: .95rem; letter-spacing: 0; text-align: center; font-family: var(--font-body); }
+  @keyframes pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .pw.animate span { animation: pop .3s ease backwards; }
+
+  .strength { display: flex; align-items: center; gap: 12px; margin-top: 13px; }
+  .bar { display: flex; gap: 5px; flex: 1 1 auto; }
+  .bar i { flex: 1; height: 6px; border-radius: 999px; background: var(--track); transition: background .3s ease; }
+  .strength .rank { font-size: .78rem; font-weight: 600; color: var(--text-faint); min-width: 82px; text-align: right; }
+
+  /* ---------- Actions ---------- */
+  .actions { display: flex; flex-direction: column; gap: 10px; }
+  .btn {
+    height: 52px; border-radius: 15px; border: 1px solid transparent;
+    font-family: var(--font-body); font-size: .98rem; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    transition: transform .12s ease, background-color .2s ease, border-color .2s ease, color .2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn svg { width: 18px; height: 18px; }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.primary { background: var(--primary); color: var(--on-primary); box-shadow: 0 12px 24px -12px color-mix(in srgb, var(--primary) 80%, transparent); }
+  .btn.primary:hover:not(:disabled) { background: var(--primary-hover); }
+  .btn.primary.copied { background: var(--good); box-shadow: 0 12px 24px -12px color-mix(in srgb, var(--good) 70%, transparent); }
+  .btn-row { display: flex; gap: 10px; }
+  .btn.ghost { flex: 1; background: var(--surface-2); color: var(--text); border-color: var(--border); }
+  .btn.ghost:hover { border-color: var(--border-strong); }
+  .btn:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--primary-soft); }
+
+  .note { font-size: .76rem; color: var(--text-faint); text-align: center; min-height: 1em; }
+
+  /* ---------- Tooltip ---------- */
+  .tip {
+    position: fixed; z-index: 60; max-width: 250px; padding: 10px 13px; border-radius: 12px;
+    background: var(--tip-bg); color: var(--tip-fg); font-size: .8rem; line-height: 1.45;
+    box-shadow: 0 14px 34px -10px rgba(0,0,0,.4);
+    opacity: 0; visibility: hidden; transform: translateY(3px);
+    transition: opacity .15s ease, transform .15s ease, visibility .15s; pointer-events: none;
+  }
+  .tip.show { opacity: 1; visibility: visible; transform: none; }
+  .tip .arrow { position: absolute; width: 11px; height: 11px; background: inherit; transform: rotate(45deg); left: var(--ax, 50%); margin-left: -5.5px; }
+  .tip:not(.down) .arrow { bottom: -5px; }
+  .tip.down .arrow { top: -5px; }
+  .tip b { font-weight: 600; font-family: var(--font-display); }
+  .tip .code { font-family: var(--font-mono); font-size: .82em; }
+  .tip .k { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .tip .k i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4.1" fill="currentColor"/>
+            <circle cx="19" cy="5.8" r="1.7" fill="currentColor"/>
+            <circle cx="4.4" cy="10.6" r="1.35" fill="currentColor"/>
+            <circle cx="7.4" cy="18.7" r="1.25" fill="currentColor"/>
+            <circle cx="18.4" cy="17.9" r="1.5" fill="currentColor"/>
+            <circle cx="7.8" cy="5" r="0.95" fill="currentColor"/>
+            <circle cx="20.6" cy="12.8" r="0.85" fill="currentColor"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Entropy Sphere</h1>
+          <p>Forged from true randomness</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn install-btn" id="installBtn" hidden aria-label="Install app" title="Install app">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></svg>
+        </button>
+        <button class="icon-btn theme-toggle" id="themeBtn" aria-label="Switch theme" title="Switch theme">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.3 6.3 0 0 0 10.5 10.5z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="card">
+      <!-- Length -->
+      <div class="block">
+        <div class="len-head">
+          <span class="lbl">Length</span>
+          <input class="num-field" id="lenNum" type="number" inputmode="numeric" min="1" max="100" value="12" aria-label="Password length" />
+        </div>
+        <div class="slider-row">
+          <button class="step" id="minusBtn" type="button" aria-label="Decrease length">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg>
+          </button>
+          <div class="slider">
+            <input type="range" id="lenRange" min="1" max="100" value="12" aria-label="Length slider" />
+          </div>
+          <button class="step" id="plusBtn" type="button" aria-label="Increase length">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Include -->
+      <div class="block">
+        <div class="block-head"><p class="section-label">Include</p></div>
+        <div class="rows">
+          <label class="row">
+            <span class="rlead">
+              <span class="swatch" style="--tint:var(--c-upper)">AZ</span>
+              <span class="ntxt"><span class="name">Uppercase</span>
+                <button type="button" class="info" data-tip="Uses letters <span class='code'>A–Z</span>." aria-label="About uppercase">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11.5v5"/><path d="M12 7.5h.01"/></svg>
+                </button></span>
+            </span>
+            <span class="switch"><input type="checkbox" id="tUpper" checked><span class="slot"></span><span class="knob"></span></span>
+          </label>
+          <label class="row">
+            <span class="rlead">
+              <span class="swatch" style="--tint:var(--c-lower)">az</span>
+              <span class="ntxt"><span class="name">Lowercase</span>
+                <button type="button" class="info" data-tip="Uses letters <span class='code'>a–z</span>." aria-label="About lowercase">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11.5v5"/><path d="M12 7.5h.01"/></svg>
+                </button></span>
+            </span>
+            <span class="switch"><input type="checkbox" id="tLower" checked><span class="slot"></span><span class="knob"></span></span>
+          </label>
+          <label class="row">
+            <span class="rlead">
+              <span class="swatch" style="--tint:var(--c-digit)">09</span>
+              <span class="ntxt"><span class="name">Numbers</span>
+                <button type="button" class="info" data-tip="Uses digits <span class='code'>0–9</span>." aria-label="About numbers">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11.5v5"/><path d="M12 7.5h.01"/></svg>
+                </button></span>
+            </span>
+            <span class="switch"><input type="checkbox" id="tDigit" checked><span class="slot"></span><span class="knob"></span></span>
+          </label>
+          <label class="row">
+            <span class="rlead">
+              <span class="swatch" style="--tint:var(--c-symbol)">#!</span>
+              <span class="ntxt"><span class="name">Symbols</span>
+                <button type="button" class="info" data-tip="Special characters — edit the set in the field below." aria-label="About symbols">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11.5v5"/><path d="M12 7.5h.01"/></svg>
+                </button></span>
+            </span>
+            <span class="switch"><input type="checkbox" id="tSymbol" checked><span class="slot"></span><span class="knob"></span></span>
+          </label>
+        </div>
+        <div class="sym-edit show" id="symEdit">
+          <div>
+            <input class="sym-input" id="symInput" type="text" value="!@#$%^&" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Symbol characters" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Options -->
+      <div class="block">
+        <div class="block-head"><p class="section-label">Options</p></div>
+        <div class="rows">
+          <label class="row">
+            <span class="rlead">
+              <span class="ntxt"><span class="name">No similar</span>
+                <button type="button" class="info" data-tip="Skips look-alike characters: <span class='code'>i l 1 o 0 O I</span>." aria-label="About no similar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11.5v5"/><path d="M12 7.5h.01"/></svg>
+                </button></span>
+            </span>
+            <span class="switch"><input type="checkbox" id="tExclude"><span class="slot"></span><span class="knob"></span></span>
+          </label>
+          <label class="row">
+            <span class="rlead">
+              <span class="ntxt"><span class="name">Unique</span>
+                <button type="button" class="info" data-tip="Every character is used at most once — no repeats." aria-label="About unique">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11.5v5"/><path d="M12 7.5h.01"/></svg>
+                </button></span>
+            </span>
+            <span class="switch"><input type="checkbox" id="tUnique"><span class="slot"></span><span class="knob"></span></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="block">
+        <div class="out-head">
+          <span class="left">
+            <p class="section-label" style="margin:0">Your password</p>
+            <button type="button" class="info" id="legendBtn" aria-label="Colour key">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11.5v5"/><path d="M12 7.5h.01"/></svg>
+            </button>
+          </span>
+          <span class="entropy" id="entropy"></span>
+        </div>
+        <div class="output">
+          <div class="pw" id="pwOut" tabindex="0" aria-live="polite"></div>
+        </div>
+        <div class="strength">
+          <div class="bar"><i></i><i></i><i></i><i></i></div>
+          <span class="rank" id="rank">—</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn primary" id="copyBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          <span id="copyLabel">Copy password</span>
+        </button>
+        <div class="btn-row">
+          <button class="btn ghost" id="refreshBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-.6 3.5"/><path d="M20 5v6h-6"/></svg>
+            Regenerate
+          </button>
+          <button class="btn ghost" id="resetBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset
+          </button>
+        </div>
+        <div class="note" id="note"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="tip" id="tip" role="tooltip"><span class="arrow"></span><span class="tip-body"></span></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const DEFAULTS = { length: 12, upper: true, lower: true, digit: true, symbol: true, symbols: "!@#$%^&", exclude: false, unique: false };
+
+  const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const LOWER = "abcdefghijklmnopqrstuvwxyz".split("");
+  const DIGIT = "0123456789".split("");
+  const LOOKALIKES = new Set("iIlL1oO0".split(""));
+
+  const $ = id => document.getElementById(id);
+  const el = {
+    lenNum: $("lenNum"), lenRange: $("lenRange"), minusBtn: $("minusBtn"), plusBtn: $("plusBtn"),
+    tUpper: $("tUpper"), tLower: $("tLower"), tDigit: $("tDigit"), tSymbol: $("tSymbol"),
+    tExclude: $("tExclude"), tUnique: $("tUnique"),
+    symInput: $("symInput"), symEdit: $("symEdit"),
+    pwOut: $("pwOut"), entropy: $("entropy"), rank: $("rank"), bars: document.querySelectorAll(".bar i"),
+    copyBtn: $("copyBtn"), copyLabel: $("copyLabel"),
+    refreshBtn: $("refreshBtn"), resetBtn: $("resetBtn"), themeBtn: $("themeBtn"), note: $("note"),
+    legendBtn: $("legendBtn"), tip: $("tip"), tipBody: document.querySelector("#tip .tip-body"),
+    installBtn: $("installBtn"), themeColor: $("themeColor"),
+  };
+
+  let currentPassword = "";
+
+  /* ---------- secure randomness ---------- */
+  function randInt(max) {
+    if (max <= 1) return 0;
+    const range = 4294967296, limit = range - (range % max);
+    const buf = new Uint32Array(1); let x;
+    do { crypto.getRandomValues(buf); x = buf[0]; } while (x >= limit);
+    return x % max;
+  }
+  function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = randInt(i + 1); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+  /* ---------- pools ---------- */
+  function symbolPool() {
+    const seen = new Set(), out = [];
+    for (const ch of el.symInput.value) { if (ch.trim() === "" || seen.has(ch)) continue; seen.add(ch); out.push(ch); }
+    return out;
+  }
+  const filterSimilar = arr => el.tExclude.checked ? arr.filter(c => !LOOKALIKES.has(c)) : arr;
+  function categories() {
+    const cats = [];
+    if (el.tUpper.checked)  cats.push(filterSimilar(UPPER));
+    if (el.tLower.checked)  cats.push(filterSimilar(LOWER));
+    if (el.tDigit.checked)  cats.push(filterSimilar(DIGIT));
+    if (el.tSymbol.checked) { const s = filterSimilar(symbolPool()); if (s.length) cats.push(s); }
+    return cats.filter(c => c.length);
+  }
+
+  /* ---------- generate ---------- */
+  function generate() {
+    const cats = categories(); el.note.textContent = "";
+    if (cats.length === 0) {
+      currentPassword = "";
+      renderEmpty(el.tSymbol.checked && !symbolPool().length ? "Add at least one symbol, or turn Symbols off" : "Turn on at least one character type");
+      el.copyBtn.disabled = true; updateStrength(0, 0); return;
+    }
+    el.copyBtn.disabled = false;
+
+    let len = clampLength();
+    const combined = [].concat(...cats), unique = el.tUnique.checked, distinct = [...new Set(combined)];
+    if (unique && len > distinct.length) { len = distinct.length; el.note.textContent = "Only " + distinct.length + " unique characters available — length capped."; }
+
+    const chars = [], used = new Set();
+    const pickUnused = pool => { const a = pool.filter(c => !used.has(c)); return a.length ? a[randInt(a.length)] : null; };
+
+    if (len >= cats.length) for (const pool of cats) {
+      const c = unique ? pickUnused(pool) : pool[randInt(pool.length)];
+      if (c != null) { chars.push(c); used.add(c); }
+    }
+    while (chars.length < len) {
+      if (unique) { const c = pickUnused(distinct); if (c === null) break; chars.push(c); used.add(c); }
+      else chars.push(combined[randInt(combined.length)]);
+    }
+    shuffle(chars);
+    currentPassword = chars.join("");
+    render(currentPassword);
+    updateStrength(currentPassword.length, distinct.length);
+  }
+
+  /* ---------- render ---------- */
+  function classOf(ch) {
+    if (ch >= "A" && ch <= "Z") return "u";
+    if (ch >= "a" && ch <= "z") return "l";
+    if (ch >= "0" && ch <= "9") return "d";
+    return "s";
+  }
+  function render(pw) {
+    el.pwOut.classList.remove("empty");
+    const frag = document.createDocumentFragment();
+    [...pw].forEach((ch, i) => {
+      const span = document.createElement("span");
+      span.className = classOf(ch); span.textContent = ch;
+      span.style.animationDelay = Math.min(i * 8, 240) + "ms";
+      frag.appendChild(span);
+    });
+    el.pwOut.innerHTML = ""; el.pwOut.appendChild(frag);
+    el.pwOut.classList.remove("animate"); void el.pwOut.offsetWidth; el.pwOut.classList.add("animate");
+  }
+  function renderEmpty(msg) { el.pwOut.classList.remove("animate"); el.pwOut.classList.add("empty"); el.pwOut.textContent = msg; }
+
+  /* ---------- strength ---------- */
+  function updateStrength(len, poolSize) {
+    let bits = (len && poolSize) ? Math.round(len * Math.log2(poolSize)) : 0;
+    el.entropy.textContent = bits ? "≈ " + bits + " bits" : "";
+    let level = 0, label = "—";
+    if (bits > 0)   { level = 1; label = "Weak"; }
+    if (bits >= 45) { level = 2; label = "Fair"; }
+    if (bits >= 65) { level = 3; label = "Strong"; }
+    if (bits >= 90) { level = 4; label = "Very strong"; }
+    const colors = ["#e11d48", "#f59e0b", "#22c55e", "#16a34a"];
+    el.bars.forEach((b, i) => { b.style.background = i < level ? colors[level - 1] : "var(--track)"; });
+    el.rank.textContent = label;
+    el.rank.style.color = level ? colors[level - 1] : "var(--text-faint)";
+  }
+
+  /* ---------- length ---------- */
+  function setLength(v, from) {
+    v = Math.max(1, Math.min(100, Math.round(v) || 1));
+    el.lenRange.value = v;
+    if (from !== "num") el.lenNum.value = v;
+    el.lenRange.style.setProperty("--fill", ((v - 1) / 99 * 100) + "%");
+    el.minusBtn.disabled = v <= 1; el.plusBtn.disabled = v >= 100;
+    return v;
+  }
+  function clampLength() { let v = parseInt(el.lenNum.value, 10); if (isNaN(v)) v = DEFAULTS.length; return setLength(v, "num-clamp"); }
+  function stepLength(delta) { setLength(parseInt(el.lenRange.value, 10) + delta); generate(); }
+
+  /* press-and-hold repeat for steppers */
+  function bindStep(btn, delta) {
+    let toStart, toRepeat;
+    const stop = () => { clearTimeout(toStart); clearInterval(toRepeat); };
+    btn.addEventListener("pointerdown", e => {
+      if (btn.disabled) return;
+      e.preventDefault(); stepLength(delta);
+      toStart = setTimeout(() => { toRepeat = setInterval(() => { if (btn.disabled) stop(); else stepLength(delta); }, 65); }, 340);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(ev => btn.addEventListener(ev, stop));
+  }
+
+  /* ---------- symbols visibility ---------- */
+  function syncSymbols() { el.symEdit.classList.toggle("show", el.tSymbol.checked); }
+
+  /* ---------- tooltip ---------- */
+  let tipBtn = null;
+  function showTip(btn) {
+    if (tipBtn === btn) { hideTip(); return; }
+    el.tipBody.innerHTML = btn.getAttribute("data-tip");
+    el.tip.classList.add("show");
+    const r = btn.getBoundingClientRect();
+    const tr = el.tip.getBoundingClientRect();
+    const pad = 8;
+    let top = r.top - tr.height - 9, down = false;
+    if (top < pad) { top = r.bottom + 9; down = true; }
+    let left = r.left + r.width / 2 - tr.width / 2;
+    left = Math.max(pad, Math.min(left, window.innerWidth - tr.width - pad));
+    el.tip.style.top = top + "px"; el.tip.style.left = left + "px";
+    el.tip.classList.toggle("down", down);
+    const ax = r.left + r.width / 2 - left;
+    el.tip.style.setProperty("--ax", Math.max(12, Math.min(ax, tr.width - 12)) + "px");
+    tipBtn = btn;
+  }
+  function hideTip() { el.tip.classList.remove("show"); tipBtn = null; }
+
+  document.querySelectorAll(".info").forEach(b =>
+    b.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); showTip(b); }));
+  document.addEventListener("click", e => { if (!el.tip.contains(e.target)) hideTip(); });
+  window.addEventListener("scroll", hideTip, true);
+  window.addEventListener("resize", hideTip);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hideTip(); });
+
+  // build colour-key tooltip content
+  el.legendBtn.setAttribute("data-tip",
+    "<b>Colour key</b>" +
+    "<span class='k'><i style='background:var(--c-upper)'></i>Uppercase</span>" +
+    "<span class='k'><i style='background:var(--c-lower)'></i>Lowercase</span>" +
+    "<span class='k'><i style='background:var(--c-digit)'></i>Numbers</span>" +
+    "<span class='k'><i style='background:var(--c-symbol)'></i>Symbols</span>");
+
+  /* ---------- copy ---------- */
+  let copyTimer = null;
+  async function copy() {
+    if (!currentPassword) return;
+    let ok = false;
+    try { await navigator.clipboard.writeText(currentPassword); ok = true; }
+    catch (e) {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = currentPassword; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select(); ok = document.execCommand("copy"); document.body.removeChild(ta);
+      } catch (_) { ok = false; }
+    }
+    if (ok) {
+      el.copyBtn.classList.add("copied"); el.copyLabel.textContent = "Copied";
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => { el.copyBtn.classList.remove("copied"); el.copyLabel.textContent = "Copy password"; }, 1500);
+    } else el.copyLabel.textContent = "Press Ctrl/Cmd+C";
+  }
+
+  /* ---------- reset ---------- */
+  function reset() {
+    setLength(DEFAULTS.length);
+    el.tUpper.checked = DEFAULTS.upper; el.tLower.checked = DEFAULTS.lower;
+    el.tDigit.checked = DEFAULTS.digit; el.tSymbol.checked = DEFAULTS.symbol;
+    el.symInput.value = DEFAULTS.symbols; el.tExclude.checked = DEFAULTS.exclude; el.tUnique.checked = DEFAULTS.unique;
+    syncSymbols(); generate();
+  }
+
+  /* ---------- theme ---------- */
+  const THEME_COLORS = { light: "#ece9f2", dark: "#0c0b15" };
+  function setTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    el.themeBtn.setAttribute("aria-label", t === "dark" ? "Switch to light theme" : "Switch to dark theme");
+    if (el.themeColor) el.themeColor.setAttribute("content", THEME_COLORS[t] || THEME_COLORS.light);
+  }
+  el.themeBtn.addEventListener("click", () => setTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"));
+
+  /* ---------- wire up ---------- */
+  el.lenRange.addEventListener("input", () => { setLength(el.lenRange.value, "range"); generate(); });
+  el.lenNum.addEventListener("input", () => { setLength(el.lenNum.value, "num"); generate(); });
+  el.lenNum.addEventListener("blur", () => { clampLength(); generate(); });
+  bindStep(el.minusBtn, -1); bindStep(el.plusBtn, +1);
+
+  [el.tUpper, el.tLower, el.tDigit, el.tExclude, el.tUnique].forEach(t => t.addEventListener("change", generate));
+  el.tSymbol.addEventListener("change", () => { syncSymbols(); generate(); });
+  el.symInput.addEventListener("input", generate);
+
+  el.copyBtn.addEventListener("click", copy);
+  el.refreshBtn.addEventListener("click", generate);
+  el.resetBtn.addEventListener("click", reset);
+  el.pwOut.addEventListener("click", () => { if (currentPassword) copy(); });
+
+  /* ---------- PWA: install prompt ---------- */
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; el.installBtn.hidden = false; });
+  el.installBtn.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch (_) {}
+    deferredPrompt = null; el.installBtn.hidden = true;
+  });
+  window.addEventListener("appinstalled", () => { deferredPrompt = null; el.installBtn.hidden = true; });
+
+  /* ---------- PWA: service worker ---------- */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("./sw.js").catch(() => {}); });
+  }
+
+  // init
+  try { if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) setTheme("dark"); else setTheme("light"); } catch (_) { setTheme("light"); }
+  setLength(DEFAULTS.length); syncSymbols(); generate();
+})();
+</script>
+</body>
+</html>
