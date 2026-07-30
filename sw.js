@@ -1,5 +1,5 @@
 /* Entropy Sphere service worker — offline-first app shell */
-const VERSION = "v1.0.0";
+const VERSION = "v1.0.1";
 const SHELL_CACHE = "es-shell-" + VERSION;
 const FONT_CACHE = "es-fonts-" + VERSION;
 
