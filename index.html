@@ -316,9 +316,9 @@
   .btn svg { width: 18px; height: 18px; }
   .btn:active { transform: scale(.98); }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn.primary { background: var(--primary); color: var(--on-primary); box-shadow: 0 12px 24px -12px color-mix(in srgb, var(--primary) 80%, transparent); }
+  .btn.primary { background: var(--primary); color: var(--on-primary); }
   .btn.primary:hover:not(:disabled) { background: var(--primary-hover); }
-  .btn.primary.copied { background: var(--good); box-shadow: 0 12px 24px -12px color-mix(in srgb, var(--good) 70%, transparent); }
+  .btn.primary.copied { background: var(--good); }
   .btn-row { display: flex; gap: 10px; }
   .btn.ghost { flex: 1; background: var(--surface-2); color: var(--text); border-color: var(--border); }
   .btn.ghost:hover { border-color: var(--border-strong); }
@@ -401,7 +401,7 @@
       <div class="block">
         <div class="block-head"><p class="section-label">Include</p></div>
         <div class="rows">
-          <label class="row">
+          <label class="row" for="tUpper">
             <span class="rlead">
               <span class="swatch" style="--tint:var(--c-upper)">AZ</span>
               <span class="ntxt"><span class="name">Uppercase</span>
@@ -411,7 +411,7 @@
             </span>
             <span class="switch"><input type="checkbox" id="tUpper" checked><span class="slot"></span><span class="knob"></span></span>
           </label>
-          <label class="row">
+          <label class="row" for="tLower">
             <span class="rlead">
               <span class="swatch" style="--tint:var(--c-lower)">az</span>
               <span class="ntxt"><span class="name">Lowercase</span>
@@ -421,7 +421,7 @@
             </span>
             <span class="switch"><input type="checkbox" id="tLower" checked><span class="slot"></span><span class="knob"></span></span>
           </label>
-          <label class="row">
+          <label class="row" for="tDigit">
             <span class="rlead">
               <span class="swatch" style="--tint:var(--c-digit)">09</span>
               <span class="ntxt"><span class="name">Numbers</span>
@@ -431,7 +431,7 @@
             </span>
             <span class="switch"><input type="checkbox" id="tDigit" checked><span class="slot"></span><span class="knob"></span></span>
           </label>
-          <label class="row">
+          <label class="row" for="tSymbol">
             <span class="rlead">
               <span class="swatch" style="--tint:var(--c-symbol)">#!</span>
               <span class="ntxt"><span class="name">Symbols</span>
@@ -453,7 +453,7 @@
       <div class="block">
         <div class="block-head"><p class="section-label">Options</p></div>
         <div class="rows">
-          <label class="row">
+          <label class="row" for="tExclude">
             <span class="rlead">
               <span class="ntxt"><span class="name">No similar</span>
                 <button type="button" class="info" data-tip="Skips look-alike characters: <span class='code'>i l 1 o 0 O I</span>." aria-label="About no similar">
@@ -462,7 +462,7 @@
             </span>
             <span class="switch"><input type="checkbox" id="tExclude"><span class="slot"></span><span class="knob"></span></span>
           </label>
-          <label class="row">
+          <label class="row" for="tUnique">
             <span class="rlead">
               <span class="ntxt"><span class="name">Unique</span>
                 <button type="button" class="info" data-tip="Every character is used at most once — no repeats." aria-label="About unique">
